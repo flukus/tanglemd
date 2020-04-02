@@ -1,25 +1,12 @@
-#!/usr/bin/env bash
+#! /usr/bin/env bash
 
 
 function eject_explicit {
-	echo eject_explicit
-}
-
-function eject_code {
-
 	#parse the input file
 	IFS=' :'; read -ra FILE <<< "$1:"
-   
-	IFS=' '
-	while read -r file <<< "$1 "; do
-		#case $file in
-			#'1') echo 1; ;;
-		#esac
-	done
-
-	file=${FILE[1]}
-	startdelim=${FILE[2]}
-	enddelim=${FILE[3]}
+	file=${FILE[0]}
+	startdelim=${FILE[1]}
+	enddelim=${FILE[2]}
 	tmp=$(mktemp)
 
 	#read the actual file and substitute the code section
@@ -31,6 +18,7 @@ function eject_code {
 			insection=1
 			#get the whitespace of this line
 			[[ "$line" =~ ^[[:space:]]* ]]
+			#if this is the master then include code in the output
 			whitespace=$BASH_REMATCH
 			echo $line >> $tmp
 			while read line; do echo "$whitespace$line" >> $tmp; done < $2
@@ -39,7 +27,6 @@ function eject_code {
 			echo $line >> $tmp
 		elif [[ $insection == 0 ]]; then
 			echo $line >> $tmp
-			#echo ${line#$whitespace}
 		fi
 	done < $file
 
@@ -47,27 +34,46 @@ function eject_code {
 	cp $tmp $file
 }
 
-incode=0
+function eject_code {
 
+	IFS=' '
+	read -ra outfiles <<< "$1"
+	for outfile in ${outfiles[@]}
+	do
+		if [[ "$outfile" =~ '!' ]]; then
+			cat $2 #if this is the master append the output
+		elif [[ "$outfile" =~ ^\`\`\` ]]; then
+			continue
+		elif [[ "$outfile" =~ .*\:.*:.* ]]; then
+			eject_explicit "$outfile" "$2"
+		else
+			echo 'error'
+		fi
+	done
+	#echo $1
+
+}
+
+incode=0
 buffer=''
 fileline=''
-while IFS= read line; do
+while IFS= read inline; do
 
-	if [[ "${line}" =~ ^\`\`\` && $incode == 0 ]]; then
+	if [[ "${inline}" =~ ^\`\`\` && $incode == 0 ]]; then
 		incode=1
-		echo ${line}
+		echo ${inline}
 		buffer=$(mktemp)
-		fileline="$line"
-	elif [[ "${line}" =~ ^\`\`\` && $incode == 1 ]]; then
+		fileline="$inline"
+	elif [[ "${inline}" =~ ^\`\`\` && $incode == 1 ]]; then
 		incode=0
-		echo $line
-		eject_code "$fileline" $buffer
+		eject_code "$fileline" "$buffer"
+		echo "${inline}"
 		IFS=
 		rm $buffer
 	elif [[ $incode == 1 ]]; then
-		echo $line >> $buffer
+		echo $inline >> $buffer
 	else
-		echo $line
+		echo $inline
 	fi
 
 done 
