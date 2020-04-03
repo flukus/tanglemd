@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 
-function inject_code {
-	echo "$1" 
+function inject_explicit {
 
 	#parse the input file
-	IFS=' :'
-	read -ra FILE <<< "$1:"
-	file=${FILE[1]}
-	startdelim=${FILE[2]}
-	enddelim=${FILE[3]}
+	IFS=':'
+	read -ra FILE <<< "$1"
+	file=${FILE[0]}
+	startdelim=${FILE[1]}
+	enddelim=${FILE[2]}
 
 	#read the actual file and substitute the code section
 	insection=0
@@ -25,14 +24,35 @@ function inject_code {
 			echo ${line#$whitespace}
 		fi
 	done < $file
+
+}
+
+function inject_code {
+	echo "$1" 
+
+	IFS=' '; read -ra outfiles <<< "$1"
+	master=0
+	for outfile in ${outfiles[@]}
+	do
+		if [[ "$outfile" =~ ^\`\`\` ]]; then
+			continue #ignore start tags
+		elif [[ "$outfile" =~ '!' ]]; then
+			master=1
+			#cat $2 #if this is the master append the output
+		elif [[ "$outfile" =~ .*\:.*:.* && $master == 0 ]]; then
+			inject_explicit "$outfile"
+		fi
+	done
+
 }
 
 incode=0
 
 while IFS= read line; do
-	#[[ "${line}" =~ ^[[:whitespace:]]+fnmdjsk$ ]] && echo "match: $line"
-	#[[ "${line}" =~ "?[[:alnum:]]+" ]] && echo "match2: $line"
-	if [[ "${line}" =~ '```' && $incode == 0 ]]; then
+	if [[ "${line}" =~ ^\`\`\`\[a-zA-Z\]*\[\[:space:\]\]\*\! && $incode == 0 ]]; then
+		#this is the code master, inject lines directly
+		echo $line
+	elif [[ "${line}" =~ '```' && $incode == 0 ]]; then
 		incode=1
 		#echo $line
 		inject_code "$line"
