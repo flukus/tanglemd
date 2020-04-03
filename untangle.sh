@@ -1,5 +1,80 @@
 #! /usr/bin/env bash
 
+declare -i Debug
+Debug=0
+
+function outfile {
+	((debug)) && echo "outfile: $1" || echo "$1"
+	echo "$1"
+}
+
+function debug {
+	(( $Debug )) && echo "Debug: $1" 1>&2
+}
+
+
+function eject_function {
+	debug '--eject_function'
+	tmp=$(mktemp)
+
+	#get the file and create the regex to find the declaration
+	IFS=':'; read -ra FILE <<< "$1"
+	file=${FILE[0]}
+	pattern=${FILE[1]}
+	debug "$file"
+	debug "$pattern"
+	IFS='(), '; read -ra patternParts <<< "$pattern"
+	patternRegex="${patternParts[0]}.*(.*"
+	for part in ${patternParts[@]:1}; do
+		patternRegex="$patternRegex$part.*"
+	done
+	patternRegex="$patternRegex)"
+	debug "$patternRegex"
+
+	insection=0
+	whitespace=''
+	declare -i openBraceCount closeBraceCount inBrace
+	while IFS= read line; do
+		if [[ $insection == 0 && "$line" =~ $patternRegex && ! "$line" =~ \;$ ]]; then
+			insection=1
+			debug "match: $line"
+			[[ "$line" =~ ^[[:space:]]* ]]
+			whitespace=$BASH_REMATCH
+		elif [[ $insection == 0 ]]; then
+			debug "fromfile $line" '>> $tmp'
+			echo "$line" >> $tmp
+		fi
+
+		if [[ $insection = 1 ]]; then
+			openBraces=${line//[^\{]}
+			closeBraces=${line//[^\}]}
+			openBraceCount=$((openBraceCount + ${#openBraces}))
+			closeBraceCount=$((closeBraceCount + ${#closeBraces}))
+			inBrace=$((inBrace + openBraceCount))
+			braceDiff=$((openBraceCount - closeBraceCount))
+
+			debug "line: $line"
+			debug "obc: $openBraceCount"
+			debug "cbc: $closeBraceCount"
+			debug "ib: $inBrace"
+			debug "bd: $braceDiff"
+
+			if (( inBrace != 0 && braceDiff <= 0 )); then
+				debug "endCode"
+				insection=0
+				inBrace=0
+				openBraceCount=0
+				closeBraceCount=0
+				while IFS=  read codeline; do debug "fromsource $whitespace$codeline"; done < $2
+				while IFS=  read codeline; do echo "$whitespace$codeline" >> $tmp; done < $2
+			fi
+
+		fi
+	done < $file
+
+	cp $tmp $file
+	rm $tmp
+}
 
 function eject_explicit {
 	#parse the input file
@@ -40,10 +115,13 @@ function eject_code {
 	read -ra outfiles <<< "$1"
 	for outfile in ${outfiles[@]}
 	do
+		#echo $outfile
 		if [[ "$outfile" =~ '!' ]]; then
 			cat $2 #if this is the master append the output
 		elif [[ "$outfile" =~ ^\`\`\` ]]; then
 			continue
+		elif [[ "$outfile" =~ .*:.*\(.*\) ]]; then
+			eject_function "$outfile" "$2"
 		elif [[ "$outfile" =~ .*\:.*:.* ]]; then
 			eject_explicit "$outfile" "$2"
 		else
@@ -57,7 +135,7 @@ function eject_code {
 incode=0
 buffer=''
 fileline=''
-while IFS= read inline; do
+while IFS='' read inline; do
 
 	if [[ "${inline}" =~ ^\`\`\` && $incode == 0 ]]; then
 		incode=1
@@ -68,10 +146,10 @@ while IFS= read inline; do
 		incode=0
 		eject_code "$fileline" "$buffer"
 		echo "${inline}"
-		IFS=
+		IFS=''
 		rm $buffer
 	elif [[ $incode == 1 ]]; then
-		echo $inline >> $buffer
+		echo "$inline" >> $buffer
 	else
 		echo $inline
 	fi
