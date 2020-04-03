@@ -1,5 +1,50 @@
 #!/usr/bin/env bash
 
+function inject_function {
+	tmp=$(mktemp)
+
+	#get the file and create the regex to find the declaration
+	IFS=':'; read -ra FILE <<< "$1"
+	file=${FILE[0]}
+	pattern=${FILE[1]}
+	IFS='(), '; read -ra patternParts <<< "$pattern"
+	patternRegex="${patternParts[0]}.*(.*"
+	for part in ${patternParts[@]:1}; do
+		patternRegex="$patternRegex$part.*"
+	done
+	patternRegex="$patternRegex)"
+
+	insection=0
+	whitespace=''
+	declare -i openBraceCount closeBraceCount inBrace
+	while IFS= read line; do
+		if [[ $insection == 0 && "$line" =~ $patternRegex && ! "$line" =~ \;$ ]]; then
+			insection=1
+			[[ "$line" =~ ^[[:space:]]* ]]
+			whitespace=$BASH_REMATCH
+		fi
+
+		if [[ $insection = 1 ]]; then
+			echo "${line#$whitespace}"
+
+			openBraces=${line//[^\{]}
+			closeBraces=${line//[^\}]}
+			openBraceCount=$((openBraceCount + ${#openBraces}))
+			closeBraceCount=$((closeBraceCount + ${#closeBraces}))
+			inBrace=$((inBrace + openBraceCount))
+			braceDiff=$((openBraceCount - closeBraceCount))
+
+			if (( inBrace != 0 && braceDiff <= 0 )); then
+				insection=0
+				inBrace=0
+				openBraceCount=0
+				closeBraceCount=0
+			fi
+
+		fi
+	done < $file
+}
+
 function inject_explicit {
 
 	#parse the input file
@@ -39,6 +84,8 @@ function inject_code {
 		elif [[ "$outfile" =~ '!' ]]; then
 			master=1
 			#cat $2 #if this is the master append the output
+		elif [[ "$outfile" =~ .*:.*\(.*\) ]]; then
+			inject_function "$outfile"
 		elif [[ "$outfile" =~ .*\:.*:.* && $master == 0 ]]; then
 			inject_explicit "$outfile"
 		fi
