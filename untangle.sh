@@ -11,7 +11,11 @@ function debug {
 	(( $Debug )) && echo "Debug: $1" 1>&2
 }
 
-usage() { echo 'Usage: command [-h ] [-p <string>] <input>' 1>&2; exit 1; }
+function print_output {
+	echo "$1" >> $output_file
+}
+
+usage() { echo 'Usage: command [-h ] [-p <string>] <output>' 1>&2; exit 1; }
 while getopts ":h" o; do
 	case "" in
 		h|*) usage; ;;
@@ -19,9 +23,10 @@ while getopts ":h" o; do
 done
 shift $((OPTIND-1))
 
-input_file=$1
-[[ ! -e "$input_file" ]] && error "could not find file '$input_file'" && exit
-input_dir=$(dirname "$input_file")
+output_file=$1
+#[[ ! -e "$output_file" ]] && error "could not find file '$output_file'" && exit
+rm $output_file
+output_dir=$(dirname "$output_file")
 
 function eject_function {
 	debug '--eject_function'
@@ -29,7 +34,7 @@ function eject_function {
 
 	#get the file and create the regex to find the declaration
 	IFS=':'; read -ra FILE <<< "$1"
-	code_file="$input_dir/${FILE[0]}"
+	code_file="$output_dir/${FILE[0]}"
 	pattern=${FILE[1]}
 	debug "$code_file"
 	debug "$pattern"
@@ -89,7 +94,7 @@ function eject_function {
 function eject_explicit {
 	#parse the input file
 	IFS=' :'; read -ra FILE <<< "$1:"
-	code_file="$input_dir/${FILE[0]}"
+	code_file="$output_dir/${FILE[0]}"
 	startdelim=${FILE[1]}
 	enddelim=${FILE[2]}
 	tmp=$(mktemp)
@@ -127,7 +132,7 @@ function eject_code {
 	do
 		#echo $outfile
 		if [[ "$outfile" =~ '!' ]]; then
-			cat $2 #if this is the master append the output
+			cat $2 >> $output_file #if this is the master append the output
 		elif [[ "$outfile" =~ ^\`\`\` ]]; then
 			continue
 		elif [[ "$outfile" =~ .*:.*\(.*\) ]]; then
@@ -149,19 +154,19 @@ while IFS='' read inline; do
 
 	if [[ "${inline}" =~ ^\`\`\` && $incode == 0 ]]; then
 		incode=1
-		echo ${inline}
+		print_output "$inline"
 		buffer=$(mktemp)
 		fileline="$inline"
 	elif [[ "${inline}" =~ ^\`\`\` && $incode == 1 ]]; then
 		incode=0
 		eject_code "$fileline" "$buffer"
-		echo "${inline}"
+		print_output "${inline}"
 		IFS=''
 		rm $buffer
 	elif [[ $incode == 1 ]]; then
 		echo "$inline" >> $buffer
 	else
-		echo $inline
+		print_output "$inline"
 	fi
 
-done < $input_file
+done

@@ -3,7 +3,7 @@
 cp source.sql result.sql
 
 dirname=$(dirname "${BASH_SOURCE[0]}")
-../../untangle.sh "./source.md" > "$dirname/result.md"
+<"./source.md" ../../untangle.sh "$dirname/result.md"
 
 diff result.sql source.sql
 diff expected.md result.md
