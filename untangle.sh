@@ -128,7 +128,7 @@ function eject_code {
 
 	declare -i code_lines=$(<$2 wc -l)
 	if (( code_lines == 0)); then
-		exit
+		return 0
 	fi
 	IFS=' '
 	read -ra outfiles <<< "$1"
