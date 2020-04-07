@@ -25,7 +25,7 @@ shift $((OPTIND-1))
 
 output_file=$1
 #[[ ! -e "$output_file" ]] && error "could not find file '$output_file'" && exit
-rm $output_file
+rm -f $output_file
 output_dir=$(dirname "$output_file")
 
 function eject_function {
@@ -126,6 +126,10 @@ function eject_explicit {
 
 function eject_code {
 
+	declare -i code_lines=$(<$2 wc -l)
+	if (( code_lines == 0)); then
+		exit
+	fi
 	IFS=' '
 	read -ra outfiles <<< "$1"
 	for outfile in ${outfiles[@]}
@@ -162,7 +166,7 @@ while IFS='' read inline; do
 		eject_code "$fileline" "$buffer"
 		print_output "${inline}"
 		IFS=''
-		rm $buffer
+		rm -f $buffer
 	elif [[ $incode == 1 ]]; then
 		echo "$inline" >> $buffer
 	else
