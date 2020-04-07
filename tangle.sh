@@ -1,12 +1,28 @@
 #!/usr/bin/env bash
 
+function error {
+	echo "Error: $1" 1>&2
+}
+
+usage() { echo 'Usage: command [-h ] [-p <string>] <input>' 1>&2; exit 1; }
+while getopts ":h" o; do
+	case "" in
+		h|*) usage; ;;
+	esac
+done
+shift $((OPTIND-1))
+
+input_file=$1
+[[ ! -e "$input_file" ]] && error "could not find file '$input_file'" && exit
+input_dir=$(dirname "$input_file")
+
 function inject_function {
 	tmp=$(mktemp)
 
 	#get the file and create the regex to find the declaration
 	IFS=':'; read -ra FILE <<< "$1"
-	file=${FILE[0]}
-	pattern=${FILE[1]}
+	code_file="$input_dir/${FILE[0]}"
+	pattern="${FILE[1]}"
 	IFS='(), '; read -ra patternParts <<< "$pattern"
 	patternRegex="${patternParts[0]}.*(.*"
 	for part in ${patternParts[@]:1}; do
@@ -42,7 +58,7 @@ function inject_function {
 			fi
 
 		fi
-	done < $file
+	done < $code_file
 }
 
 function inject_explicit {
@@ -50,7 +66,7 @@ function inject_explicit {
 	#parse the input file
 	IFS=':'
 	read -ra FILE <<< "$1"
-	file=${FILE[0]}
+	code_file="$input_dir/${FILE[0]}"
 	startdelim=${FILE[1]}
 	enddelim=${FILE[2]}
 
@@ -68,7 +84,7 @@ function inject_explicit {
 		elif [[ $insection == 1 ]]; then
 			echo ${line#$whitespace}
 		fi
-	done < $file
+	done < $code_file
 
 }
 
@@ -110,4 +126,4 @@ while IFS= read line; do
 		echo $line
 	fi
 	#echo $line
-done 
+done < $input_file

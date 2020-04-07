@@ -2,7 +2,7 @@
 
 rm result.md
 dirname=$(dirname "${BASH_SOURCE[0]}")
-<"$dirname/source.md" ../../tangle.sh > "$dirname/result.md"
+../../tangle.sh "$dirname/source.md" > "$dirname/result.md"
 
 diff expected.md result.md
 

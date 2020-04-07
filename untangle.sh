@@ -3,15 +3,25 @@
 declare -i Debug
 Debug=0
 
-function outfile {
-	((debug)) && echo "outfile: $1" || echo "$1"
-	echo "$1"
+function error {
+	echo "Error: $1" 1>&2
 }
 
 function debug {
 	(( $Debug )) && echo "Debug: $1" 1>&2
 }
 
+usage() { echo 'Usage: command [-h ] [-p <string>] <input>' 1>&2; exit 1; }
+while getopts ":h" o; do
+	case "" in
+		h|*) usage; ;;
+	esac
+done
+shift $((OPTIND-1))
+
+input_file=$1
+[[ ! -e "$input_file" ]] && error "could not find file '$input_file'" && exit
+input_dir=$(dirname "$input_file")
 
 function eject_function {
 	debug '--eject_function'
@@ -19,9 +29,9 @@ function eject_function {
 
 	#get the file and create the regex to find the declaration
 	IFS=':'; read -ra FILE <<< "$1"
-	file=${FILE[0]}
+	code_file="$input_dir/${FILE[0]}"
 	pattern=${FILE[1]}
-	debug "$file"
+	debug "$code_file"
 	debug "$pattern"
 	IFS='(), '; read -ra patternParts <<< "$pattern"
 	patternRegex="${patternParts[0]}.*(.*"
@@ -70,16 +80,16 @@ function eject_function {
 			fi
 
 		fi
-	done < $file
+	done < $code_file
 
-	cp $tmp $file
+	cp $tmp $code_file
 	rm $tmp
 }
 
 function eject_explicit {
 	#parse the input file
 	IFS=' :'; read -ra FILE <<< "$1:"
-	file=${FILE[0]}
+	code_file="$input_dir/${FILE[0]}"
 	startdelim=${FILE[1]}
 	enddelim=${FILE[2]}
 	tmp=$(mktemp)
@@ -103,10 +113,10 @@ function eject_explicit {
 		elif [[ $insection == 0 ]]; then
 			echo $line >> $tmp
 		fi
-	done < $file
+	done < $code_file
 
 	#cat $tmp
-	cp $tmp $file
+	cp $tmp $code_file
 }
 
 function eject_code {
@@ -154,4 +164,4 @@ while IFS='' read inline; do
 		echo $inline
 	fi
 
-done 
+done < $input_file
