@@ -430,7 +430,11 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 bin_SCRIPTS = tanglemd untanglemd
 CLEANFILES = $(bin_SCRIPTS)
-TESTS = test/tangle-c/test.sh
+TESTS = \
+test/tangle-c/test.sh \
+test/tangle-sql/test.sh \
+test/tangle-sql-master/test.sh
+
 all: all-am
 
 .SUFFIXES:
@@ -654,6 +658,20 @@ recheck: all
 test/tangle-c/test.sh.log: test/tangle-c/test.sh
 	@p='test/tangle-c/test.sh'; \
 	b='test/tangle-c/test.sh'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test/tangle-sql/test.sh.log: test/tangle-sql/test.sh
+	@p='test/tangle-sql/test.sh'; \
+	b='test/tangle-sql/test.sh'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test/tangle-sql-master/test.sh.log: test/tangle-sql-master/test.sh
+	@p='test/tangle-sql-master/test.sh'; \
+	b='test/tangle-sql-master/test.sh'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
