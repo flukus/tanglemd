@@ -33,20 +33,20 @@ This approach means TangleMD can be used with minimal/no impact on other develop
 # Vim Integration
 
 ```vim
-function ReadLit()
+function ReadTMD()
 	sil exe 'r!../../tangle.sh' shellescape(expand("<afile>"))
 	set syntax=markdown
 endfunction
 
-function WriteLit()
+function WriteTMD()
 	sil exe 'w !tee | ../../untangle.sh' shellescape(expand("<afile>"))
 	set nomodified
 endfunction
 
-augroup lit
+augroup tmd
 	au!
-	au BufReadCmd *.tmd call ReadLit()
-	au BufWriteCmd *.tmd call WriteLit()
+	au BufReadCmd *.tmd call ReadTMD()
+	au BufWriteCmd *.tmd call WriteTMD()
 augroup end
 ```
 
