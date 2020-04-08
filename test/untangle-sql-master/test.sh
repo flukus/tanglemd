@@ -1,10 +1,9 @@
 #/usr/bin/env bash
 
-cp source.sql result.sql
-
 dirname=$(dirname "${BASH_SOURCE[0]}")
-<"./source.md" ../../untangle.sh "$dirname/result.md"
+cp "$dirname/source.sql" "$dirname/result.sql"
+<"$dirname/source.md" ../untanglemd "$dirname/result.md"
 
-diff result.sql source.sql
-diff expected.md result.md
+diff "$dirname/result.sql" "$dirname/source.sql"
+diff "$dirname/expected.md" "$dirname/result.md"
 

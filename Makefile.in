@@ -433,7 +433,11 @@ CLEANFILES = $(bin_SCRIPTS)
 TESTS = \
 test/tangle-c/test.sh \
 test/tangle-sql/test.sh \
-test/tangle-sql-master/test.sh
+test/tangle-sql-master/test.sh \
+test/untangle-c/test.sh \
+test/untangle-sql/test.sh \
+test/untangle-sql-many/test.sh \
+test/untangle-sql-master/test.sh
 
 all: all-am
 
@@ -672,6 +676,34 @@ test/tangle-sql/test.sh.log: test/tangle-sql/test.sh
 test/tangle-sql-master/test.sh.log: test/tangle-sql-master/test.sh
 	@p='test/tangle-sql-master/test.sh'; \
 	b='test/tangle-sql-master/test.sh'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test/untangle-c/test.sh.log: test/untangle-c/test.sh
+	@p='test/untangle-c/test.sh'; \
+	b='test/untangle-c/test.sh'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test/untangle-sql/test.sh.log: test/untangle-sql/test.sh
+	@p='test/untangle-sql/test.sh'; \
+	b='test/untangle-sql/test.sh'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test/untangle-sql-many/test.sh.log: test/untangle-sql-many/test.sh
+	@p='test/untangle-sql-many/test.sh'; \
+	b='test/untangle-sql-many/test.sh'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test/untangle-sql-master/test.sh.log: test/untangle-sql-master/test.sh
+	@p='test/untangle-sql-master/test.sh'; \
+	b='test/untangle-sql-master/test.sh'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

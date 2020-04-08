@@ -1,10 +1,10 @@
 #/usr/bin/env bash
 
-cp source.c result.c
 
 dirname=$(dirname "${BASH_SOURCE[0]}")
-<"$dirname/source.md" ../../untangle.sh "$dirname/result.md"
+cp "$dirname/source.c" "$dirname/result.c"
+<"$dirname/source.md" ../untanglemd "$dirname/result.md"
 
-diff expected.c result.c
-diff result.md expected.md
+diff "$dirname/expected.c" "$dirname/result.c"
+diff "$dirname/result.md" "$dirname/expected.md"
 
