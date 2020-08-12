@@ -40,7 +40,7 @@ Some paragraph explaing the limits of multiplication, here is the code
 The only difference from standard markdown is the "calculator.c:multiply(int,int)" in the code section declaration.
 This lets tanglemd know where the actual code is.
 
-Running "tanglemd multiply.tmd > result.tmd" while find the multiply function and weave it into the document. The result will look like this:
+Running "tanglemd multiply.tmd > result.tmd" will find the multiply function and weave it into the document. The result will look like this:
 
 ```md 
 Some paragraph explaing the limits of multiplication, here is the code
@@ -71,7 +71,7 @@ This can be untangled by running "\<result.tmd untangle multiply.tmd".
 multiply.tmd will now be exactly as it was, this keeps the documetation scm friendly.
 calculator.c will now have the updated version of the function.
 
-Seet the vim integration for how to make this happen automatically.
+See the vim integration for how to make this happen automatically.
 
 # Problems with Literate Programming
 
@@ -93,12 +93,12 @@ Seet the vim integration for how to make this happen automatically.
 
 ```vim
 function ReadTMD()
-	sil exe 'r!../../tangle.sh' shellescape(expand("<afile>"))
+	sil exe 'r!tanglemd' shellescape(expand("<afile>"))
 	set syntax=markdown
 endfunction
 
 function WriteTMD()
-	sil exe 'w !tee | ../../untangle.sh' shellescape(expand("<afile>"))
+	sil exe 'w !tee | untanglemd' shellescape(expand("<afile>"))
 	set nomodified
 endfunction
 

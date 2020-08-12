@@ -88,6 +88,16 @@ function inject_explicit {
 
 }
 
+function inject_file {
+
+	code_file="$input_dir/$1"
+	#if the file is an absolute path use that
+	if [[ "$1" =~ ^/ ]]; then
+		code_file=$1
+	fi
+	cat $code_file
+}
+
 function inject_code {
 	echo "$1" 
 
@@ -104,6 +114,8 @@ function inject_code {
 			inject_function "$outfile"
 		elif [[ "$outfile" =~ .*\:.*:.* && $master == 0 ]]; then
 			inject_explicit "$outfile"
+		else
+			inject_file "$outfile"
 		fi
 	done
 
@@ -112,6 +124,7 @@ function inject_code {
 incode=0
 
 while IFS= read line; do
+	#search for lines that contain ```[lang] file
 	if [[ "${line}" =~ ^\`\`\`\[a-zA-Z\]*\[\[:space:\]\]\*\! && $incode == 0 ]]; then
 		#this is the code master, inject lines directly
 		echo $line

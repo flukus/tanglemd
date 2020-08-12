@@ -1,6 +1,6 @@
 #/usr/bin/env sh
 
-testname='tangle-c'
+testname='tangle-whole'
 result="$PWD/test/$testname/result.md"
 
 rm -f "$result"
