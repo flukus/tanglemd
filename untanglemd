@@ -39,11 +39,11 @@ function eject_function {
 	debug "$code_file"
 	debug "$pattern"
 	IFS='(), '; read -ra patternParts <<< "$pattern"
-	patternRegex="${patternParts[0]}.*(.*"
+	patternRegex="${patternParts[0]}.*\(.*"
 	for part in ${patternParts[@]:1}; do
 		patternRegex="$patternRegex$part.*"
 	done
-	patternRegex="$patternRegex)"
+	patternRegex="$patternRegex\)"
 	debug "$patternRegex"
 
 	insection=0

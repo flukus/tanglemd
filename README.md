@@ -109,3 +109,7 @@ augroup tmd
 augroup end
 ```
 
+# TODO
+
+* fix issue where calling function gets tangled (current workaround is to include return type)
+

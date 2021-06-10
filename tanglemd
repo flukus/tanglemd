@@ -24,11 +24,11 @@ function inject_function {
 	code_file="$input_dir/${FILE[0]}"
 	pattern="${FILE[1]}"
 	IFS='(), '; read -ra patternParts <<< "$pattern"
-	patternRegex="${patternParts[0]}.*(.*"
+	patternRegex="${patternParts[0]}.*\(.*"
 	for part in ${patternParts[@]:1}; do
 		patternRegex="$patternRegex$part.*"
 	done
-	patternRegex="$patternRegex)"
+	patternRegex="$patternRegex\)"
 
 	insection=0
 	whitespace=''
